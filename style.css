@@ -146,6 +146,32 @@ body {
   background-color: #cccccc;
   cursor: not-allowed;
 }
+.secondary-button {
+  background-color: #f4f7f9;
+  color: #666;
+  border: 1px solid #ccc;
+  padding: 7px 12px;
+  border-radius: 4px;
+  font-size: 0.95em;
+  font-weight: 400;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  align-self: flex-end;
+  margin-top: 8px;
+}
+
+.secondary-button:hover {
+  background-color: #e9ecef;
+  color: #333;
+  border-color: #bbb;
+}
+
+.secondary-button:disabled {
+  background-color: #f4f7f9;
+  color: #bbb;
+  border-color: #eee;
+  cursor: not-allowed;
+}
 
 .status-message {
   margin-top: 10px;

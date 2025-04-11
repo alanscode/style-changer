@@ -88,6 +88,61 @@ function applyAndSaveStyles(newStyles) {
         return false;
     }
 }
+// --- Helper Function to Sanitize HTML (Remove Text Content) ---
+function getSanitizedHTMLStructure() {
+    if (!document.body) {
+        console.error("Document body not found for sanitization.");
+        return null;
+    }
+
+    // Clone the body to avoid modifying the live DOM
+    const clonedBody = document.body.cloneNode(true);
+
+    // Recursive function to remove non-whitespace text nodes
+    function removeTextNodes(node) {
+        if (!node) return;
+
+        const childNodes = Array.from(node.childNodes); // Create static array
+        childNodes.forEach(child => {
+            if (child.nodeType === Node.TEXT_NODE) {
+                // Remove text node if it contains non-whitespace characters
+                if (child.textContent.trim().length > 0) {
+                    node.removeChild(child);
+                }
+            } else if (child.nodeType === Node.ELEMENT_NODE) {
+                // Recursively process element nodes
+                // Skip script and style tags to avoid removing their content
+                if (child.tagName !== 'SCRIPT' && child.tagName !== 'STYLE') {
+                    removeTextNodes(child);
+                }
+            }
+        });
+    }
+// Start the removal process on the cloned body
+removeTextNodes(clonedBody);
+
+// Helper to sanitize attributes that may contain sensitive data
+function sanitizeAttributes(node) {
+    if (!node) return;
+    if (node.nodeType === Node.ELEMENT_NODE) {
+        // List of attributes to sanitize
+        const attrsToSanitize = ["src", "href", "alt", "value", "placeholder", "title"];
+        attrsToSanitize.forEach(attr => {
+            if (node.hasAttribute && node.hasAttribute(attr)) {
+                node.setAttribute(attr, `[sanitized-${attr}]`);
+            }
+        });
+        // Recursively sanitize child elements
+        Array.from(node.children).forEach(child => sanitizeAttributes(child));
+    }
+}
+
+// Sanitize attributes on the cloned body
+sanitizeAttributes(clonedBody);
+
+// Return the innerHTML of the sanitized clone
+return clonedBody.innerHTML;
+}
 
 
 // Listen for messages from the popup
@@ -96,14 +151,90 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log("Message received in content script:", request.action);
 
   if (request.action === "toggleStyles") {
-    if (request.disabled) {
-      disableCustomStyles();
-      sendResponse({ status: "Styles disabled" });
-    } else {
+    if (request.enabled) {
       enableCustomStyles();
-      sendResponse({ status: "Styles enabled" });
+      sendResponse({ status: "Custom styling enabled" });
+    } else {
+      disableCustomStyles();
+      sendResponse({ status: "Custom styling disabled" });
     }
     return false; // Synchronous response
+  }
+  else if (request.action === "clearCustomStyles") {
+    // Remove the custom style element from the page
+    try {
+      // Only remove the style element from the DOM
+      const styleElement = document.getElementById(STYLE_ID);
+      if (styleElement) {
+        styleElement.parentNode.removeChild(styleElement);
+        console.log("Custom style element removed by content script.");
+      } else {
+        console.log("Custom style element not found, nothing to remove.");
+      }
+      // Clearing localStorage and extension storage is handled by the popup
+      sendResponse({ status: "success" });
+    } catch (err) {
+      console.error("Error removing style element:", err);
+      sendResponse({ error: err.message || "Failed to clear custom styles visually." });
+    }
+    return true; // Async response
+  }
+  else if (request.action === "randomTheme") {
+    // Generate a random theme and apply it
+    try {
+      // Helper to generate a random color in hex
+      function randomColor() {
+        const hex = Math.floor(Math.random() * 0xffffff).toString(16);
+        return "#" + ("000000" + hex).slice(-6);
+      }
+
+      // Generate random theme variables
+      const bgColor = randomColor();
+      const textColor = randomColor();
+      const linkColor = randomColor();
+      const accentColor = randomColor();
+
+      // Example CSS using the random colors
+      const randomCSS = `
+        body, .content, .container {
+          background: ${bgColor} !important;
+          color: ${textColor} !important;
+          font-family: 'VT323', monospace !important;
+        }
+        a, a:visited {
+          color: ${linkColor} !important;
+        }
+        button, .submit-button, .setting-checkbox:checked + label {
+          background: ${accentColor} !important;
+          color: ${textColor} !important;
+          border: 2px solid ${linkColor} !important;
+        }
+        input, textarea {
+          background: ${accentColor}22 !important;
+          color: ${textColor} !important;
+          border: 1px solid ${linkColor} !important;
+        }
+        header, footer {
+          background: ${accentColor} !important;
+          color: ${textColor} !important;
+        }
+      `;
+
+      // Apply the CSS
+      const styleElement = ensureStyleElementExists();
+      styleElement.innerHTML = randomCSS;
+      styleElement.disabled = false;
+
+      // Save to localStorage for persistence
+      const hostname = window.location.hostname;
+      const siteThemeKey = `${hostname}-theme`;
+      localStorage.setItem(siteThemeKey, randomCSS);
+
+      sendResponse({ status: "success" });
+    } catch (err) {
+      sendResponse({ error: err.message || "Failed to apply random theme." });
+    }
+    return true; // Async response
   }
   else if (request.action === "processRestyle") {
     console.log("Action: processRestyle");
@@ -116,7 +247,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const styleElement = ensureStyleElementExists();
         const currentCSS = styleElement ? styleElement.innerHTML : "";
         // Still using innerHTML, but now it doesn't need to cross the message boundary
-        const currentHTML = document.body ? document.body.innerHTML : "";
+        // const currentHTML = document.body ? document.body.innerHTML : ""; // Original
+        const currentHTML = getSanitizedHTMLStructure(); // Get sanitized HTML
         console.log(`Local context: CSS length ${currentCSS.length}, HTML length ${currentHTML.length}`);
 
         if (!currentHTML) {

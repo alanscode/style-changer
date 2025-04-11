@@ -18,13 +18,17 @@
     "48": "icon48.png",
     "128": "icon128.png"
   },
+  "background": {
+    "service_worker": "background.js"
+  },
   "permissions": ["activeTab", "storage", "scripting"],
   "host_permissions": [
-    "http://localhost:8000/*"
+    "http://localhost:8000/*",
+    "<all_urls>"
   ],
   "content_scripts": [
     {
-      "matches": ["*://*.reddit.com/*", "*://news.ycombinator.com/*"],
+      "matches": ["<all_urls>"],
       "js": ["content.js"],
       "run_at": "document_idle"
     }
