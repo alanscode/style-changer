@@ -1,5 +1,8 @@
 // popup.js
+console.log("popup.js script started"); // Log 1: Script start
+
 document.addEventListener('DOMContentLoaded', () => {
+  console.log("DOMContentLoaded event fired"); // Log 2: DOM ready
   const toggle = document.getElementById('enableStylesToggle');
   const restylePrompt = document.getElementById('restylePrompt');
   const restyleSubmit = document.getElementById('restyleSubmit');
@@ -158,7 +161,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Clear Styling Button Click Listener ---
   const clearStylesBtn = document.getElementById('clearStylesBtn');
+  console.log("clearStylesBtn element:", clearStylesBtn); // Log 3: Element check
+  if (!clearStylesBtn) {
+      console.error("Could not find clearStylesBtn element!");
+      return; // Stop if button not found
+  }
   clearStylesBtn.addEventListener('click', async () => {
+    console.log("Clear Styling button clicked!"); // Add this line
     updateStatus("Clearing custom styling...", false);
     clearStylesBtn.disabled = true;
 
