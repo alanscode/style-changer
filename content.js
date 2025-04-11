@@ -160,25 +160,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
     return false; // Synchronous response
   }
-  else if (request.action === "clearCustomStyles") {
-    // Remove the custom style element from the page
-    try {
-      // Only remove the style element from the DOM
-      const styleElement = document.getElementById(STYLE_ID);
-      if (styleElement) {
-        styleElement.parentNode.removeChild(styleElement);
-        console.log("Custom style element removed by content script.");
-      } else {
-        console.log("Custom style element not found, nothing to remove.");
-      }
-      // Clearing localStorage and extension storage is handled by the popup
-      sendResponse({ status: "success" });
-    } catch (err) {
-      console.error("Error removing style element:", err);
-      sendResponse({ error: err.message || "Failed to clear custom styles visually." });
-    }
-    return true; // Async response
-  }
   else if (request.action === "randomTheme") {
     // Generate a random theme and apply it
     try {

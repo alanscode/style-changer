@@ -4,7 +4,7 @@ body {
   margin: 0;
   background-color: #f4f7f9; /* Light grey background */
   color: #333; /* Dark grey text */
-  width: 300px; /* Fixed width for the popup */
+  width: 600px; /* Fixed width for the popup (increased) */
   overflow: hidden; /* Prevent scrollbars */
 }
 
@@ -12,7 +12,7 @@ body {
   display: flex;
   flex-direction: column;
   padding: 15px;
-  min-height: 250px; /* Ensure minimum height for content */
+  min-height: 500px; /* Ensure minimum height for content (increased) */
 }
 
 /* Header Styles */
