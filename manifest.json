@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Hello World Style Changer",
+  "name": "AI Web Stylist",
   "version": "1.0",
   "description": "Applies a cyberpunk style to Reddit, with an option to disable.",
   "action": {
@@ -18,14 +18,13 @@
     "48": "icon48.png",
     "128": "icon128.png"
   },
-  "permissions": [
-    "activeTab",
-    "storage",
-    "scripting"
+  "permissions": ["activeTab", "storage", "scripting"],
+  "host_permissions": [
+    "http://localhost:8000/*"
   ],
   "content_scripts": [
     {
-      "matches": ["*://*.reddit.com/*"],
+      "matches": ["*://*.reddit.com/*", "*://news.ycombinator.com/*"],
       "js": ["content.js"],
       "run_at": "document_idle"
     }

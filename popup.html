@@ -2,21 +2,30 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Style Changer Extension</title>
+  <title>Style Changer</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="card">
-    <div class="card-header">Style Changer</div>
-    <div id="hello-world">Reddit UI Enhanced</div>
-    <div class="toggle-row">
-      <label class="toggle-label" for="disableStylesToggle">Disable Styles</label>
-      <span class="toggle-switch">
-        <input type="checkbox" id="disableStylesToggle">
-        <span class="slider"></span>
-      </span>
-    </div>
-    <div class="card-footer">Reddit UI Enhanced</div>
+  <div class="container">
+    <header class="header">
+      <h1>Style Changer</h1>
+      <p>Enhance Reddit UI</p>
+    </header>
+    <main class="content">
+      <div class="setting-row">
+        <label for="disableStylesToggle" class="setting-label">Disable Custom Styles</label>
+        <input type="checkbox" id="disableStylesToggle" class="setting-checkbox">
+      </div>
+      <div class="restyle-section">
+        <label for="restylePrompt" class="setting-label">Enter Art Direction Prompt:</label>
+        <textarea id="restylePrompt" class="prompt-textarea" rows="4" placeholder="e.g., make it look like a 90s geocities page"></textarea>
+        <button id="restyleSubmit" class="submit-button">Restyle Page</button>
+        <div id="statusMessage" class="status-message"></div> <!-- For feedback -->
+      </div>
+    </main>
+    <footer class="footer">
+      <p>v1.0</p>
+    </footer>
   </div>
   <script src="popup.js"></script>
 </body>
