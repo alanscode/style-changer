@@ -4,12 +4,15 @@
   <meta charset="UTF-8">
   <title>Style Changer</title>
   <link rel="stylesheet" href="style.css">
+  <!-- CodeMirror CSS for syntax highlighting -->
+  <link rel="stylesheet" href="lib/codemirror.min.css">
+  <link rel="stylesheet" href="lib/material-darker.min.css">
 </head>
 <body>
   <div class="container">
     <header class="header">
       <h1>Style Changer</h1>
-      <p>Enhance Reddit UI</p>
+      <p id="headerSubtitle">Enhance Reddit UI</p>
     </header>
     <main class="content">
       <div class="setting-row">
@@ -21,8 +24,14 @@
         <textarea id="restylePrompt" class="prompt-textarea" rows="4" placeholder="e.g., make it look like a 90s geocities page"></textarea>
         <button id="restyleSubmit" class="submit-button">Restyle Page</button>
         <div id="statusMessage" class="status-message"></div> <!-- For feedback -->
-        <button id="randomTheme" class="secondary-button" style="margin-top: 10px;">Random</button>
       </div>
+      <div class="edit-styles-section">
+        <label for="customStylesEditor" class="setting-label">Edit Custom Styles (CSS):</label>
+        <div id="customStylesEditor"></div>
+      </div>
+      <!-- CodeMirror JS for syntax highlighting -->
+      <script src="lib/codemirror.min.js"></script>
+      <script src="lib/css.min.js"></script>
     </main>
     <footer class="footer">
       <p>v1.0</p>

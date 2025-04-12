@@ -66,84 +66,105 @@ function disableCustomStyles() {
 
 // Function to apply new styles and save them
 function applyAndSaveStyles(newStyles) {
+  console.log(
+    "[applyAndSaveStyles] Called with styles:",
+    newStyles ? newStyles.substring(0, 100) + "..." : "(empty)"
+  );
+  try {
     const styleElement = ensureStyleElementExists();
-    if (styleElement && typeof newStyles === 'string') {
-        console.log("Applying generated styles...");
-        styleElement.innerHTML = newStyles;
+    if (styleElement && typeof newStyles === "string") {
+      console.log("Applying generated styles...");
+      styleElement.innerHTML = newStyles;
 
-        // Save the new theme to localStorage for persistence
-        const hostname = window.location.hostname;
-        const siteThemeKey = `${hostname}-theme`;
-        localStorage.setItem(siteThemeKey, newStyles);
-        console.log(`New theme saved to localStorage key: ${siteThemeKey}`);
+      // Save the new theme to localStorage for persistence
+      const hostname = window.location.hostname;
+      const siteThemeKey = `${hostname}-theme`;
+      localStorage.setItem(siteThemeKey, newStyles);
+      console.log(`New theme saved to localStorage key: ${siteThemeKey}`);
 
-        // Ensure styles are enabled after applying
-        styleElement.disabled = false;
-        // Also update the toggle state in storage to reflect styles being enabled
-        chrome.storage.local.set({ stylesDisabled: false });
+      // Ensure styles are enabled after applying
+      styleElement.disabled = false;
+      // Also update the toggle state in storage to reflect styles being enabled
+      chrome.storage.local.set({ stylesDisabled: false });
 
-        return true;
+      console.log(
+        "[applyAndSaveStyles] Styles applied and saved successfully."
+      );
+      return true;
     } else {
-        console.error("Failed to apply styles: Style element not found or invalid styles provided.");
-        return false;
+      console.error(
+        "[applyAndSaveStyles] Failed: Style element not found or invalid styles provided."
+      );
+      return false;
     }
+  } catch (error) {
+    console.error("[applyAndSaveStyles] Error during execution:", error);
+    return false;
+  }
 }
 // --- Helper Function to Sanitize HTML (Remove Text Content) ---
 function getSanitizedHTMLStructure() {
-    if (!document.body) {
-        console.error("Document body not found for sanitization.");
-        return null;
-    }
+  if (!document.body) {
+    console.error("Document body not found for sanitization.");
+    return null;
+  }
 
-    // Clone the body to avoid modifying the live DOM
-    const clonedBody = document.body.cloneNode(true);
+  // Clone the body to avoid modifying the live DOM
+  const clonedBody = document.body.cloneNode(true);
 
-    // Recursive function to remove non-whitespace text nodes
-    function removeTextNodes(node) {
-        if (!node) return;
+  // Recursive function to remove non-whitespace text nodes
+  function removeTextNodes(node) {
+    if (!node) return;
 
-        const childNodes = Array.from(node.childNodes); // Create static array
-        childNodes.forEach(child => {
-            if (child.nodeType === Node.TEXT_NODE) {
-                // Remove text node if it contains non-whitespace characters
-                if (child.textContent.trim().length > 0) {
-                    node.removeChild(child);
-                }
-            } else if (child.nodeType === Node.ELEMENT_NODE) {
-                // Recursively process element nodes
-                // Skip script and style tags to avoid removing their content
-                if (child.tagName !== 'SCRIPT' && child.tagName !== 'STYLE') {
-                    removeTextNodes(child);
-                }
-            }
-        });
-    }
-// Start the removal process on the cloned body
-removeTextNodes(clonedBody);
+    const childNodes = Array.from(node.childNodes); // Create static array
+    childNodes.forEach((child) => {
+      if (child.nodeType === Node.TEXT_NODE) {
+        // Remove text node if it contains non-whitespace characters
+        if (child.textContent.trim().length > 0) {
+          node.removeChild(child);
+        }
+      } else if (child.nodeType === Node.ELEMENT_NODE) {
+        // Recursively process element nodes
+        // Skip script and style tags to avoid removing their content
+        if (child.tagName !== "SCRIPT" && child.tagName !== "STYLE") {
+          removeTextNodes(child);
+        }
+      }
+    });
+  }
 
-// Helper to sanitize attributes that may contain sensitive data
-function sanitizeAttributes(node) {
+  // Start the removal process on the cloned body
+  removeTextNodes(clonedBody);
+
+  // Helper to sanitize attributes that may contain sensitive data
+  function sanitizeAttributes(node) {
     if (!node) return;
     if (node.nodeType === Node.ELEMENT_NODE) {
-        // List of attributes to sanitize
-        const attrsToSanitize = ["src", "href", "alt", "value", "placeholder", "title"];
-        attrsToSanitize.forEach(attr => {
-            if (node.hasAttribute && node.hasAttribute(attr)) {
-                node.setAttribute(attr, `[sanitized-${attr}]`);
-            }
-        });
-        // Recursively sanitize child elements
-        Array.from(node.children).forEach(child => sanitizeAttributes(child));
+      // List of attributes to sanitize
+      const attrsToSanitize = [
+        "src",
+        "href",
+        "alt",
+        "value",
+        "placeholder",
+        "title",
+      ];
+      attrsToSanitize.forEach((attr) => {
+        if (node.hasAttribute && node.hasAttribute(attr)) {
+          node.setAttribute(attr, `[sanitized-${attr}]`);
+        }
+      });
+      // Recursively sanitize child elements
+      Array.from(node.children).forEach((child) => sanitizeAttributes(child));
     }
+  }
+
+  // Sanitize attributes on the cloned body
+  sanitizeAttributes(clonedBody);
+
+  // Return the innerHTML of the sanitized clone
+  return clonedBody.innerHTML;
 }
-
-// Sanitize attributes on the cloned body
-sanitizeAttributes(clonedBody);
-
-// Return the innerHTML of the sanitized clone
-return clonedBody.innerHTML;
-}
-
 
 // Listen for messages from the popup
 // Make the listener async to handle fetch
@@ -159,65 +180,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       sendResponse({ status: "Custom styling disabled" });
     }
     return false; // Synchronous response
-  }
-  else if (request.action === "randomTheme") {
-    // Generate a random theme and apply it
-    try {
-      // Helper to generate a random color in hex
-      function randomColor() {
-        const hex = Math.floor(Math.random() * 0xffffff).toString(16);
-        return "#" + ("000000" + hex).slice(-6);
-      }
-
-      // Generate random theme variables
-      const bgColor = randomColor();
-      const textColor = randomColor();
-      const linkColor = randomColor();
-      const accentColor = randomColor();
-
-      // Example CSS using the random colors
-      const randomCSS = `
-        body, .content, .container {
-          background: ${bgColor} !important;
-          color: ${textColor} !important;
-          font-family: 'VT323', monospace !important;
-        }
-        a, a:visited {
-          color: ${linkColor} !important;
-        }
-        button, .submit-button, .setting-checkbox:checked + label {
-          background: ${accentColor} !important;
-          color: ${textColor} !important;
-          border: 2px solid ${linkColor} !important;
-        }
-        input, textarea {
-          background: ${accentColor}22 !important;
-          color: ${textColor} !important;
-          border: 1px solid ${linkColor} !important;
-        }
-        header, footer {
-          background: ${accentColor} !important;
-          color: ${textColor} !important;
-        }
-      `;
-
-      // Apply the CSS
-      const styleElement = ensureStyleElementExists();
-      styleElement.innerHTML = randomCSS;
-      styleElement.disabled = false;
-
-      // Save to localStorage for persistence
-      const hostname = window.location.hostname;
-      const siteThemeKey = `${hostname}-theme`;
-      localStorage.setItem(siteThemeKey, randomCSS);
-
-      sendResponse({ status: "success" });
-    } catch (err) {
-      sendResponse({ error: err.message || "Failed to apply random theme." });
-    }
-    return true; // Async response
-  }
-  else if (request.action === "processRestyle") {
+  } else if (request.action === "processRestyle") {
     console.log("Action: processRestyle");
     const promptText = request.prompt;
 
@@ -230,10 +193,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         // Still using innerHTML, but now it doesn't need to cross the message boundary
         // const currentHTML = document.body ? document.body.innerHTML : ""; // Original
         const currentHTML = getSanitizedHTMLStructure(); // Get sanitized HTML
-        console.log(`Local context: CSS length ${currentCSS.length}, HTML length ${currentHTML.length}`);
+        console.log(
+          `Local context: CSS length ${currentCSS.length}, HTML length ${currentHTML.length}`
+        );
 
         if (!currentHTML) {
-            throw new Error("Could not get HTML content from page.");
+          throw new Error("Could not get HTML content from page.");
         }
 
         // 2. Call the backend server
@@ -241,41 +206,49 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         // --- Debugging: Log data before sending ---
         console.log("Data being sent to server:");
         console.log("Prompt:", promptText);
-        console.log("HTML Structure (first 500 chars):", currentHTML ? currentHTML.substring(0, 500) : "null or empty");
+        console.log(
+          "HTML Structure (first 500 chars):",
+          currentHTML ? currentHTML.substring(0, 500) : "null or empty"
+        );
         const payload = {
-            prompt: promptText,
-            html_structure: currentHTML
+          prompt: promptText,
+          html_structure: currentHTML,
         };
         console.log("Payload object:", payload);
         // --- End Debugging ---
-        const serverResponse = await fetch('http://localhost:8000/restyle', {
-          method: 'POST',
+        const serverResponse = await fetch("http://localhost:8000/restyle", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(payload), // Use the logged payload object
         });
 
         if (!serverResponse.ok) {
-          const errorData = await serverResponse.json().catch(() => ({ detail: 'Unknown server error' }));
-          throw new Error(`Server error: ${serverResponse.status} - ${errorData.detail || 'Failed to fetch'}`);
+          const errorData = await serverResponse
+            .json()
+            .catch(() => ({ detail: "Unknown server error" }));
+          throw new Error(
+            `Server error: ${serverResponse.status} - ${
+              errorData.detail || "Failed to fetch"
+            }`
+          );
         }
 
         const data = await serverResponse.json();
         const generatedStyle = data.generated_style;
 
         if (!generatedStyle) {
-            throw new Error("Server did not return generated styles.");
+          throw new Error("Server did not return generated styles.");
         }
 
         // 3. Apply the styles
         console.log("Applying styles received from server...");
         if (applyAndSaveStyles(generatedStyle)) {
-            sendResponse({ status: "success" }); // Send success back to popup
+          sendResponse({ status: "success" }); // Send success back to popup
         } else {
-            throw new Error("Failed to apply styles locally.");
+          throw new Error("Failed to apply styles locally.");
         }
-
       } catch (error) {
         console.error("Error during processRestyle:", error);
         sendResponse({ error: error.message }); // Send error back to popup
@@ -283,8 +256,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     })(); // End of async IIFE
 
     return true; // Indicate asynchronous response
-  }
-  else {
+  } else if (request && request.action === "updateCustomStyles") {
+    const css = request.css || "";
+    const success = applyAndSaveStyles(css);
+    if (success) {
+      sendResponse({ status: "success" });
+    } else {
+      sendResponse({ error: "Failed to apply custom styles." });
+    }
+    return true; // Indicate asynchronous response for updateCustomStyles
+  } else {
     console.log("Unknown action received:", request.action);
     // Optional: send a response for unknown actions
     // sendResponse({ error: "Unknown action" });
