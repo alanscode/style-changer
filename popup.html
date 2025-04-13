@@ -79,6 +79,31 @@
       margin: 0;
       font-weight: 500;
       opacity: 0.85;
+      position: relative;
+      display: inline-block;
+      background: linear-gradient(
+        to right,
+        var(--md-accent3) 0%,
+        var(--md-accent) 20%,
+        var(--md-accent2) 40%,
+        var(--md-accent) 60%,
+        var(--md-accent3) 80%,
+        var(--md-accent3) 100%
+      );
+      background-size: 200% auto;
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 2s linear infinite;
+    }
+    
+    @keyframes shimmer {
+      0% {
+        background-position: 0% center;
+      }
+      100% {
+        background-position: 200% center;
+      }
     }
     .content {
       flex: 1;
