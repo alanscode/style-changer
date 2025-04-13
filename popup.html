@@ -42,10 +42,15 @@
       padding: 0 0 8px 0;
       width: 800px;
       max-width: 100vw;
-      min-height: 480px;
+      min-height: 600px;
+      min-width: 800px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      overflow-y: hidden !important;
+      overflow-x: hidden !important;
+      -webkit-overflow-scrolling: none;
+      overscroll-behavior: none;
     }
     /* Increase font size in custom CSS editor */
     #customStylesEditor,
@@ -174,32 +179,63 @@
     #customStylesEditor {
       width: 100%;
       max-width: 800px;
-      height: 600px;
+      height: 450px;
       max-height: 100%;
       border-radius: 8px;
       overflow: hidden;
       border: 1.5px solid var(--md-accent2);
       background: #181c20;
       margin-top: 2px;
+      display: none; /* Hidden by default */
     }
-    .footer {
-      text-align: right;
-      padding: 8px 18px 4px 0;
-      font-size: 0.92rem;
-      color: var(--md-muted);
-      border-top: 1px solid var(--md-border);
-      background: transparent;
-      letter-spacing: 0.5px;
+    .editor-visible {
+      display: block !important;
     }
-    /* Scrollbar styling for dark mode */
+    
+    .editor-mode .setting-row,
+    .editor-mode .restyle-section {
+      display: none !important;
+    }
+    
+    /* Hide scrollbars by default */
     ::-webkit-scrollbar {
-      width: 8px;
-      background: #23272e;
+      width: 0px !important; /* Hide vertical scrollbar */
+      height: 0px !important; /* Hide horizontal scrollbar */
+      background: transparent !important;
     }
     ::-webkit-scrollbar-thumb {
-      background: transparent; /* Hide the thumb */
-      border-radius: 8px;
-    } /* Added missing closing brace */
+      background: transparent !important;
+    }
+    
+    /* Override for CodeMirror scrollbars */
+    .CodeMirror-vscrollbar::-webkit-scrollbar,
+    .CodeMirror-hscrollbar::-webkit-scrollbar,
+    .CodeMirror-scrollbar-filler::-webkit-scrollbar,
+    .CodeMirror-gutter-filler::-webkit-scrollbar,
+    .CodeMirror-scroll::-webkit-scrollbar {
+      width: 16px !important; /* Show vertical scrollbar (2x width) */
+      background: #23272e !important;
+    }
+    
+    .CodeMirror-vscrollbar::-webkit-scrollbar-thumb,
+    .CodeMirror-hscrollbar::-webkit-scrollbar-thumb,
+    .CodeMirror-scrollbar-filler::-webkit-scrollbar-thumb,
+    .CodeMirror-gutter-filler::-webkit-scrollbar-thumb,
+    .CodeMirror-scroll::-webkit-scrollbar-thumb {
+      background: var(--md-accent) !important; /* Match accent color */
+      border-radius: 10px !important;
+    }
+    
+    /* Direct style for CodeMirror scrollbars */
+    .CodeMirror-vscrollbar {
+      width: 16px !important;
+      background: #23272e !important;
+    }
+    
+    .CodeMirror-vscrollbar div {
+      background: var(--md-accent) !important;
+      border-radius: 10px !important;
+    }
     .edit-styles-header {
       display: flex;
       align-items: center;
@@ -234,7 +270,6 @@
 <body>
   <div class="container">
     <header class="header">
-
       <p id="headerSubtitle"></p>
     </header>
     <main class="content">
@@ -250,8 +285,11 @@
       </div>
       <div class="edit-styles-section">
         <div class="edit-styles-header" style="display: flex; align-items: center; justify-content: space-between;">
-          <label for="customStylesEditor" class="setting-label" style="margin-bottom: 0;">Edit Custom Styles (CSS)</label>
-          <button id="copyCustomCssBtn" class="copy-css-btn" title="Copy CSS to clipboard">Copy</button>
+          <div>
+            <a href="#" id="toggleEditorLink" class="setting-label" style="margin-bottom: 0; text-decoration: none; cursor: pointer; color: var(--md-accent);">Edit Custom Styles (CSS)</a>
+            <a href="#" id="cancelEditorLink" class="setting-label" style="margin-bottom: 0; margin-left: 15px; text-decoration: none; cursor: pointer; color: var(--md-danger); display: none;">Cancel</a>
+          </div>
+          <button id="copyCustomCssBtn" class="copy-css-btn" title="Copy CSS to clipboard" style="display: none;">Copy</button>
         </div>
         <div id="customStylesEditor"></div>
       </div>
@@ -259,9 +297,6 @@
       <script src="lib/codemirror.min.js"></script>
       <script src="lib/css.min.js"></script>
     </main>
-    <footer class="footer">
-      <span>v1.0</span>
-    </footer>
   </div>
   <script src="popup.js"></script>
 </body>
