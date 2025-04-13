@@ -227,27 +227,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // After loading, check if there is content and resize popup if needed
       setTimeout(() => {
-        const cssValue = codeMirrorEditor.getValue();
-        const hasContent = cssValue && cssValue.trim().length > 0;
-        // Default popup size from style.css: width 600px, min-height 500px
-        // Double size: width 1200px, height 1000px
-        if (hasContent) {
-          window.resizeTo(1200, 1000);
-        } else {
-          window.resizeTo(600, 500);
-        }
-        // Debounced auto-save and resize for custom styles
+        // Debounced auto-save for custom styles
         let debounceTimeout = null;
         codeMirrorEditor.on('change', () => {
           if (debounceTimeout) clearTimeout(debounceTimeout);
           debounceTimeout = setTimeout(() => {
             const value = codeMirrorEditor.getValue();
-            if (value && value.trim().length > 0) {
-              window.resizeTo(1200, 1000);
-            } else {
-              window.resizeTo(600, 500);
-            }
-
             // Auto-save logic (debounced)
             try {
               const css = value;
@@ -263,4 +248,25 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Removed Save button handler as it's no longer needed due to auto-save
+// Copy CSS to clipboard button logic
+  const copyBtn = document.getElementById('copyCustomCssBtn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      if (codeMirrorEditor) {
+        try {
+          const css = codeMirrorEditor.getValue();
+          await navigator.clipboard.writeText(css);
+          copyBtn.textContent = "Copied!";
+          setTimeout(() => {
+            copyBtn.textContent = "Copy CSS";
+          }, 1200);
+        } catch (err) {
+          copyBtn.textContent = "Error";
+          setTimeout(() => {
+            copyBtn.textContent = "Copy CSS";
+          }, 1200);
+        }
+      }
+    });
+  }
 });
