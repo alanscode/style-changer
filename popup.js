@@ -350,6 +350,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (cancelEditorLink) {
                   cancelEditorLink.style.display = "none";
                 }
+                
+                // Hide delete link
+                if (deleteStylesLink) {
+                  deleteStylesLink.style.display = "none";
+                }
               }
             );
           } catch (error) {
@@ -367,6 +372,11 @@ document.addEventListener("DOMContentLoaded", () => {
           if (cancelEditorLink) {
             cancelEditorLink.style.display = "inline-block";
           }
+          
+          // Show delete link
+          if (deleteStylesLink) {
+            deleteStylesLink.style.display = "inline-block";
+          }
 
           // Show copy button
           if (copyButton) {
@@ -380,6 +390,91 @@ document.addEventListener("DOMContentLoaded", () => {
             }, 10);
           }
         }
+      }
+    });
+  }
+
+  // Delete styles functionality
+  const deleteStylesLink = document.getElementById("deleteStylesLink");
+  if (deleteStylesLink) {
+    deleteStylesLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      console.log("Delete link clicked");
+
+      // Confirm deletion with the user
+      if (confirm("Are you sure you want to delete the custom styles for this site? This cannot be undone.")) {
+        // Delete the localStorage item for this site
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          if (!tabs.length) return;
+          const tabId = tabs[0].id;
+          chrome.scripting.executeScript(
+            {
+              target: { tabId },
+              func: () => {
+                try {
+                  const hostname = window.location.hostname;
+                  const siteThemeKey = `${hostname}-theme`;
+                  localStorage.removeItem(siteThemeKey);
+                  return true;
+                } catch (e) {
+                  console.error("Error deleting styles:", e);
+                  return false;
+                }
+              },
+            },
+            (results) => {
+              const success = results && results[0] && results[0].result === true;
+              if (success) {
+                // Send message to content script to apply empty styles
+                sendMessageToActiveTab(
+                  { action: "updateCustomStyles", css: "" },
+                  (response) => {
+                    console.log("Apply empty styles response:", response);
+                    updateStatus("Custom styles deleted successfully", false);
+                  }
+                );
+                
+                // Hide the editor
+                const editor = document.getElementById("customStylesEditor");
+                const contentElement = document.querySelector(".content");
+                const copyButton = document.getElementById("copyCustomCssBtn");
+                
+                if (editor && contentElement) {
+                  // Hide editor
+                  editor.style.display = "none";
+                  contentElement.classList.remove("editor-mode");
+                  toggleEditorLink.textContent = "Edit Custom Styles (CSS)";
+                  
+                  // Hide delete link
+                  deleteStylesLink.style.display = "none";
+                  
+                  // Hide cancel link
+                  if (cancelEditorLink) {
+                    cancelEditorLink.style.display = "none";
+                  }
+                  
+                  // Hide copy button
+                  if (copyButton) {
+                    copyButton.style.display = "none";
+                  }
+                  
+                  // Clear the editor content
+                  if (codeMirrorEditor) {
+                    codeMirrorEditor.setValue("");
+                  }
+                  
+                  // Hide the edit-styles-section
+                  const editStylesSection = document.querySelector(".edit-styles-section");
+                  if (editStylesSection) {
+                    editStylesSection.style.display = "none";
+                  }
+                }
+              } else {
+                updateStatus("Error deleting custom styles", true);
+              }
+            }
+          );
+        });
       }
     });
   }
@@ -406,6 +501,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Hide cancel link
         cancelEditorLink.style.display = "none";
+        
+        // Hide delete link
+        if (deleteStylesLink) {
+          deleteStylesLink.style.display = "none";
+        }
 
         // Hide copy button
         if (copyButton) {

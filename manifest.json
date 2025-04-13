@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "AI Web Stylist",
+  "name": "AI CSS Restyler",
   "version": "1.0",
-  "description": "Applies a cyberpunk style to Reddit, with an option to disable.",
+  "description": "Restyles the current website with AI",
   "action": {
     "default_popup": "popup.html",
     "default_width": 800,
