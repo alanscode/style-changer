@@ -15,17 +15,6 @@ function ensureStyleElementExists() {
     console.log("Style element not found, creating and adding to head.");
     styleElement = document.createElement("style");
     styleElement.id = STYLE_ID;
-
-    // Inject Google Fonts if not already present (Optional, keep if needed)
-    if (!document.getElementById(FONT_ID)) {
-      const fontLink = document.createElement("link");
-      fontLink.id = FONT_ID;
-      fontLink.rel = "stylesheet";
-      fontLink.href =
-        "https://fonts.googleapis.com/css2?family=VT323&display=swap"; // Example font
-      document.head.appendChild(fontLink);
-    }
-
     // Load the last saved theme for this site ONCE during creation
     const hostname = window.location.hostname;
     const siteThemeKey = `${hostname}-theme`; // Simplified key
