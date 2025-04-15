@@ -247,9 +247,30 @@ document.addEventListener("DOMContentLoaded", () => {
             if (codeMirrorEditor) {
               codeMirrorEditor.setValue(customStylesValue);
             }
+            // If custom styles exist, ensure the enable toggle is checked and storage updated
+            if (customStylesValue.trim().length > 0) {
+              const toggle = document.getElementById("enableStylesToggle");
+              if (toggle) {
+                toggle.checked = true;
+                chrome.storage.local.set({ stylesEnabled: true });
+              }
+            } else {
+              // If no custom styles, uncheck the toggle and update storage
+              const toggle = document.getElementById("enableStylesToggle");
+              if (toggle) {
+                toggle.checked = false;
+                chrome.storage.local.set({ stylesEnabled: false });
+              }
+            }
           } else {
             if (codeMirrorEditor) {
               codeMirrorEditor.setValue("");
+            }
+            // If no results, uncheck the toggle and update storage
+            const toggle = document.getElementById("enableStylesToggle");
+            if (toggle) {
+              toggle.checked = false;
+              chrome.storage.local.set({ stylesEnabled: false });
             }
           }
           // Hide or show the edit-styles-section based on custom styles content
