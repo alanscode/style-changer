@@ -155,8 +155,6 @@ function getSanitizedHTMLStructure() {
   return clonedBody.innerHTML;
 }
 
-// Listen for messages from the popup
-// Make the listener async to handle fetch
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log("Message received in content script:", request.action);
 
@@ -172,7 +170,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.action === "processRestyle") {
     console.log("Action: processRestyle");
     const promptText = request.prompt;
-
+    console.log("Prompt: ", promptText);
     // Use an immediately-invoked async function to handle the fetch and response
     (async () => {
       try {
