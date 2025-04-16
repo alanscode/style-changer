@@ -91,15 +91,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // --- Load Initial State for Toggle ---
-  // Migrate old key if present, otherwise use new key
   chrome.storage.local.get(["stylesEnabled", "stylesDisabled"], (result) => {
     if (typeof result.stylesEnabled === "boolean") {
       toggle.checked = result.stylesEnabled;
-    } else if (typeof result.stylesDisabled === "boolean") {
-      // Migrate: invert old value
-      toggle.checked = !result.stylesDisabled;
-      chrome.storage.local.set({ stylesEnabled: !result.stylesDisabled });
-      chrome.storage.local.remove("stylesDisabled");
+      chrome.storage.local.set({ stylesEnabled: result.stylesEnabled });
     } else {
       toggle.checked = true; // Default: enabled
       chrome.storage.local.set({ stylesEnabled: true });
@@ -371,7 +366,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (cancelEditorLink) {
                   cancelEditorLink.style.display = "none";
                 }
-                
+
                 // Hide delete link
                 if (deleteStylesLink) {
                   deleteStylesLink.style.display = "none";
@@ -393,7 +388,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (cancelEditorLink) {
             cancelEditorLink.style.display = "inline-block";
           }
-          
+
           // Show delete link
           if (deleteStylesLink) {
             deleteStylesLink.style.display = "inline-block";
@@ -423,7 +418,11 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Delete link clicked");
 
       // Confirm deletion with the user
-      if (confirm("Are you sure you want to delete the custom styles for this site? This cannot be undone.")) {
+      if (
+        confirm(
+          "Are you sure you want to delete the custom styles for this site? This cannot be undone."
+        )
+      ) {
         // Delete the localStorage item for this site
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
           if (!tabs.length) return;
@@ -444,7 +443,8 @@ document.addEventListener("DOMContentLoaded", () => {
               },
             },
             (results) => {
-              const success = results && results[0] && results[0].result === true;
+              const success =
+                results && results[0] && results[0].result === true;
               if (success) {
                 // Send message to content script to apply empty styles
                 sendMessageToActiveTab(
@@ -454,38 +454,40 @@ document.addEventListener("DOMContentLoaded", () => {
                     updateStatus("Custom styles deleted successfully", false);
                   }
                 );
-                
+
                 // Hide the editor
                 const editor = document.getElementById("customStylesEditor");
                 const contentElement = document.querySelector(".content");
                 const copyButton = document.getElementById("copyCustomCssBtn");
-                
+
                 if (editor && contentElement) {
                   // Hide editor
                   editor.style.display = "none";
                   contentElement.classList.remove("editor-mode");
                   toggleEditorLink.textContent = "Edit Custom Styles (CSS)";
-                  
+
                   // Hide delete link
                   deleteStylesLink.style.display = "none";
-                  
+
                   // Hide cancel link
                   if (cancelEditorLink) {
                     cancelEditorLink.style.display = "none";
                   }
-                  
+
                   // Hide copy button
                   if (copyButton) {
                     copyButton.style.display = "none";
                   }
-                  
+
                   // Clear the editor content
                   if (codeMirrorEditor) {
                     codeMirrorEditor.setValue("");
                   }
-                  
+
                   // Hide the edit-styles-section
-                  const editStylesSection = document.querySelector(".edit-styles-section");
+                  const editStylesSection = document.querySelector(
+                    ".edit-styles-section"
+                  );
                   if (editStylesSection) {
                     editStylesSection.style.display = "none";
                   }
@@ -522,7 +524,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Hide cancel link
         cancelEditorLink.style.display = "none";
-        
+
         // Hide delete link
         if (deleteStylesLink) {
           deleteStylesLink.style.display = "none";

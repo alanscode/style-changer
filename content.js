@@ -101,21 +101,28 @@ function getSanitizedHTMLStructure() {
   // Clone the body to avoid modifying the live DOM
   const clonedBody = document.body.cloneNode(true);
 
-  // Recursive function to remove non-whitespace text nodes
+  // Tags inside which text nodes should be preserved
+  const preserveTextTags = new Set([
+    "SPAN", "DIV", "A", "P", "LI", "BUTTON",
+    "H1", "H2", "H3", "H4", "H5", "H6",
+    "SECTION", "ARTICLE", "HEADER", "FOOTER", "NAV", "MAIN"
+  ]);
+
+  // Recursive function to remove non-whitespace text nodes except inside preserveTextTags
   function removeTextNodes(node) {
     if (!node) return;
 
     const childNodes = Array.from(node.childNodes); // Create static array
     childNodes.forEach((child) => {
       if (child.nodeType === Node.TEXT_NODE) {
-        // Remove text node if it contains non-whitespace characters
-        if (child.textContent.trim().length > 0) {
+        // Remove text node if it contains non-whitespace characters and parent tag is NOT in preserveTextTags
+        if (child.textContent.trim().length > 0 && !preserveTextTags.has(child.parentNode.tagName)) {
           node.removeChild(child);
         }
       } else if (child.nodeType === Node.ELEMENT_NODE) {
         // Recursively process element nodes
         // Skip script and style tags to avoid removing their content
-        if (child.tagName !== "SCRIPT" && child.tagName !== "STYLE") {
+        if (child.tagName !== "SCRIPT" && child.tagName !== "STYLE" && child.tagName !== "NOSCRIPT" && child.tagName !== "META") {
           removeTextNodes(child);
         }
       }
@@ -136,13 +143,17 @@ function getSanitizedHTMLStructure() {
         "alt",
         "value",
         "placeholder",
-        "title",
       ];
-      attrsToSanitize.forEach((attr) => {
-        if (node.hasAttribute && node.hasAttribute(attr)) {
-          node.setAttribute(attr, `[sanitized-${attr}]`);
+      // Preserve aria-label and title attributes for context
+      const attrsToPreserve = new Set(["aria-label", "title"]);
+
+      Array.from(node.attributes).forEach(attr => {
+        const name = attr.name.toLowerCase();
+        if (attrsToSanitize.includes(name) && !attrsToPreserve.has(name)) {
+          node.setAttribute(name, `[sanitized-${name}]`);
         }
       });
+
       // Recursively sanitize child elements
       Array.from(node.children).forEach((child) => sanitizeAttributes(child));
     }
@@ -188,15 +199,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           throw new Error("Could not get HTML content from page.");
         }
 
-        // 2. Call the backend server
-        console.log("Contacting server from content script...");
-        // --- Debugging: Log data before sending ---
-        console.log("Data being sent to server:");
-        console.log("Prompt:", promptText);
-        console.log(
-          "HTML Structure (first 500 chars):",
-          currentHTML ? currentHTML.substring(0, 500) : "null or empty"
-        );
+
         const payload = {
           prompt: promptText,
           html_structure: currentHTML,
