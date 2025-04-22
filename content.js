@@ -21,35 +21,29 @@ function ensureStyleElementExists() {
     const storedTheme = localStorage.getItem(siteThemeKey) || ""; // Default to empty string
 
     console.log(
-      `Loading initial theme for ${hostname} from localStorage key: ${siteThemeKey}`
+      `Loading initial theme for ${hostname} from localStorage key: ${siteThemeKey}`,
+      storedTheme ? `(${storedTheme.length} chars)` : "(empty)"
     );
     styleElement.innerHTML = storedTheme;
     document.head.appendChild(styleElement);
+    // Show notification only if a theme was actually loaded
+    if (storedTheme.trim().length > 0) {
+      showNotification("Custom style applied!");
+    }
   }
   return styleElement;
 }
 
-// Function to enable the custom styles (by enabling the style element)
-function enableCustomStyles() {
-  console.log("Attempting to ENABLE custom styles...");
-  const styleElement = ensureStyleElementExists();
+// Function to enable or disable the custom styles
+function setCustomStylesEnabled(enabled) {
+  const action = enabled ? "ENABLE" : "DISABLE";
+  console.log(`Attempting to ${action} custom styles...`);
+  const styleElement = ensureStyleElementExists(); // Ensure it exists before trying to modify
   if (styleElement) {
-    styleElement.disabled = false;
-    console.log("Custom styles ENABLED (style element disabled=false).");
+    styleElement.disabled = !enabled; // Set disabled to the opposite of enabled
+    console.log(`Custom styles ${action}D (style element disabled=${!enabled}).`);
   } else {
-    console.error("Failed to find or create style element for enabling.");
-  }
-}
-
-// Function to disable the custom styles (by disabling the style element)
-function disableCustomStyles() {
-  console.log("Attempting to DISABLE custom styles...");
-  const styleElement = ensureStyleElementExists(); // Ensure it exists before trying to disable
-  if (styleElement) {
-    styleElement.disabled = true;
-    console.log("Custom styles DISABLED (style element disabled=true).");
-  } else {
-    console.log("Style element not found, cannot disable.");
+    console.error(`Failed to find or create style element for ${action.toLowerCase()}ing.`);
   }
 }
 
@@ -76,6 +70,7 @@ function applyAndSaveStyles(newStyles) {
       // Also update the toggle state in storage to reflect styles being enabled
       chrome.storage.local.set({ stylesDisabled: false });
 
+      showNotification("Custom style applied!"); // Show notification on successful application
       console.log(
         "[applyAndSaveStyles] Styles applied and saved successfully."
       );
@@ -91,6 +86,56 @@ function applyAndSaveStyles(newStyles) {
     return false;
   }
 }
+// Function to show a notification tooltip
+function showNotification(message) {
+  const notificationId = "style-changer-notification";
+  // Remove existing notification if any
+  const existingNotification = document.getElementById(notificationId);
+  if (existingNotification) {
+    existingNotification.remove();
+  }
+
+  const notification = document.createElement("div");
+  notification.id = notificationId;
+  notification.textContent = message;
+
+  // Styles inspired by popup.html :root variables
+  Object.assign(notification.style, {
+    position: "fixed",
+    top: "20px",
+    right: "20px",
+    backgroundColor: "#282828", // --md-surface
+    color: "#eff", // --md-text
+    padding: "12px 20px",
+    borderRadius: "12px", // --md-radius
+    zIndex: "99999", // Ensure it's on top
+    fontSize: "0.94rem", // Match popup setting-label
+    fontFamily: '"Roboto", system-ui, sans-serif', // --md-font
+    boxShadow: "0 2px 12px 0 rgba(0, 0, 0, 0.25)", // --md-shadow
+    border: "1px solid #333", // --md-border
+    opacity: "0", // Start fully transparent
+    transition: "opacity 0.5s ease-in-out", // Fade in/out effect
+  });
+
+  document.body.appendChild(notification);
+
+  // Trigger fade in
+  setTimeout(() => {
+    notification.style.opacity = "1";
+  }, 10); // Small delay to allow transition
+
+  // Set timeout to fade out and remove the notification after 3 seconds
+  setTimeout(() => {
+    notification.style.opacity = "0";
+    // Remove element after fade out transition completes
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 500); // Match transition duration
+  }, 3000);
+}
+
 // --- Helper Function to Sanitize HTML (Remove Text Content) ---
 function getSanitizedHTMLStructure() {
   if (!document.body) {
@@ -103,9 +148,24 @@ function getSanitizedHTMLStructure() {
 
   // Tags inside which text nodes should be preserved
   const preserveTextTags = new Set([
-    "SPAN", "DIV", "A", "P", "LI", "BUTTON",
-    "H1", "H2", "H3", "H4", "H5", "H6",
-    "SECTION", "ARTICLE", "HEADER", "FOOTER", "NAV", "MAIN"
+    "SPAN",
+    "DIV",
+    "A",
+    "P",
+    "LI",
+    "BUTTON",
+    "H1",
+    "H2",
+    "H3",
+    "H4",
+    "H5",
+    "H6",
+    "SECTION",
+    "ARTICLE",
+    "HEADER",
+    "FOOTER",
+    "NAV",
+    "MAIN",
   ]);
 
   // Recursive function to remove non-whitespace text nodes except inside preserveTextTags
@@ -116,13 +176,21 @@ function getSanitizedHTMLStructure() {
     childNodes.forEach((child) => {
       if (child.nodeType === Node.TEXT_NODE) {
         // Remove text node if it contains non-whitespace characters and parent tag is NOT in preserveTextTags
-        if (child.textContent.trim().length > 0 && !preserveTextTags.has(child.parentNode.tagName)) {
+        if (
+          child.textContent.trim().length > 0 &&
+          !preserveTextTags.has(child.parentNode.tagName)
+        ) {
           node.removeChild(child);
         }
       } else if (child.nodeType === Node.ELEMENT_NODE) {
         // Recursively process element nodes
         // Skip script and style tags to avoid removing their content
-        if (child.tagName !== "SCRIPT" && child.tagName !== "STYLE" && child.tagName !== "NOSCRIPT" && child.tagName !== "META") {
+        if (
+          child.tagName !== "SCRIPT" &&
+          child.tagName !== "STYLE" &&
+          child.tagName !== "NOSCRIPT" &&
+          child.tagName !== "META"
+        ) {
           removeTextNodes(child);
         }
       }
@@ -137,17 +205,11 @@ function getSanitizedHTMLStructure() {
     if (!node) return;
     if (node.nodeType === Node.ELEMENT_NODE) {
       // List of attributes to sanitize
-      const attrsToSanitize = [
-        "src",
-        "href",
-        "alt",
-        "value",
-        "placeholder",
-      ];
+      const attrsToSanitize = ["src", "href", "alt", "value", "placeholder"];
       // Preserve aria-label and title attributes for context
       const attrsToPreserve = new Set(["aria-label", "title"]);
 
-      Array.from(node.attributes).forEach(attr => {
+      Array.from(node.attributes).forEach((attr) => {
         const name = attr.name.toLowerCase();
         if (attrsToSanitize.includes(name) && !attrsToPreserve.has(name)) {
           node.setAttribute(name, `[sanitized-${name}]`);
@@ -170,13 +232,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log("Message received in content script:", request.action);
 
   if (request.action === "toggleStyles") {
-    if (request.enabled) {
-      enableCustomStyles();
-      sendResponse({ status: "Custom styling enabled" });
-    } else {
-      disableCustomStyles();
-      sendResponse({ status: "Custom styling disabled" });
-    }
+    setCustomStylesEnabled(request.enabled); // Use the new function
+    sendResponse({ status: `Custom styling ${request.enabled ? 'enabled' : 'disabled'}` });
     return false; // Synchronous response
   } else if (request.action === "processRestyle") {
     console.log("Action: processRestyle");
@@ -198,7 +255,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (!currentHTML) {
           throw new Error("Could not get HTML content from page.");
         }
-
 
         const payload = {
           prompt: promptText,
@@ -250,6 +306,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     const css = request.css || "";
     const success = applyAndSaveStyles(css);
     if (success) {
+      // Ensure styles are enabled after manual update
+      setCustomStylesEnabled(true); // Use the new function
       sendResponse({ status: "success" });
     } else {
       sendResponse({ error: "Failed to apply custom styles." });
@@ -266,19 +324,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // --- Initialization ---
 // Ensure the style element exists on script load
 console.log("Initializing content script...");
-const styleElement = ensureStyleElementExists();
+ensureStyleElementExists(); // Call this first to create/load the element
 
 // Set initial state based on storage
-chrome.storage.local.get(["stylesDisabled"], (result) => {
-  const isDisabled = result.stylesDisabled || false; // Default to false if undefined
-  if (styleElement) {
-    styleElement.disabled = isDisabled;
-    console.log(
-      `Custom styles initial state set: ${isDisabled ? "DISABLED" : "ENABLED"}`
-    );
-  } else {
-    console.error(
-      "Failed to find or create style element during initialization."
-    );
-  }
+chrome.storage.local.get(["stylesEnabled"], (result) => { // Changed from stylesDisabled
+  // Default to true (enabled) if not explicitly set or if stylesDisabled was used previously
+  const isEnabled = typeof result.stylesEnabled === 'boolean' ? result.stylesEnabled : true;
+  setCustomStylesEnabled(isEnabled); // Use the new function for initialization
 });
