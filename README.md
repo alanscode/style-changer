@@ -7,7 +7,7 @@ This Chrome extension allows users to dynamically restyle websites using natural
 <p align="center">
   <img src="https://github.com/user-attachments/assets/993a2070-218b-4ee2-83ed-32b56788c048" alt="Extension Screenshot" width="500"/>
   <br/>
-  Instagram.com Custom Styling Example
+  Instagram.com Example
 </p>
 
 ## Features
