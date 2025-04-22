@@ -3,7 +3,9 @@
 ## Description
 
 This Chrome extension allows users to dynamically restyle websites using natural language prompts processed by an AI backend. It injects custom CSS into the current page based on user requests or manually edited styles, saving preferences on a per-site basis.
-![image](https://github.com/user-attachments/assets/f6a6d045-8c60-44aa-8092-1bcbdc8015ac)
+
+![image](https://github.com/user-attachments/assets/993a2070-218b-4ee2-83ed-32b56788c048)
+
 
 ## Features
 
