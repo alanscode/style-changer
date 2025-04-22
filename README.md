@@ -1,4 +1,4 @@
-# AI CSS Restyler Chrome Extension
+# AI CSS Styler Chrome Extension
 
 ## Description
 
@@ -7,7 +7,7 @@ This Chrome extension allows users to dynamically restyle websites using natural
 <p align="center">
   <img src="https://github.com/user-attachments/assets/993a2070-218b-4ee2-83ed-32b56788c048" alt="Extension Screenshot" width="500"/>
   <br/>
-  Instagram.com Example
+ Example Prompt: "Make the page look like a retro 1980s arcade game interface, with a black (#000000) background, neon pink (#FF00FF), electric blue (#00FFFF), lime green (#32CD32), bright yellow (#FFFF00), vibrant orange (#FFA500), deep purple (#800080), or similar colors, pixel borders, and animated glowing buttons."
 </p>
 
 ## Features
